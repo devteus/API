@@ -7,15 +7,16 @@ builder.Services.AddSqlServer<ApplicationDbContext>(builder.Configuration["Datab
 //Passando informação pelo Body
 app.MapPost("/products", (ProductDTO productDto, ApplicationDbContext context) => {
 
-    var category = context.Categories.Where(c => c.Id == productDto.CategoryId).First();
-    var product = new Product {
+    var category = context.Category.Where(c => c.Id == productDto.CategoryId).First();
+    var product = new Product
+    {
         Code = productDto.Code,
         Name = productDto.Name,
         Description = productDto.Description,
         Category = category
-    };
-    ProductRepository.Add(productDto);
-    return Results.Created($"/products/product.Code", productDto.Code);
+    };  
+    context.Add(product);
+    return Results.Created($"/products/{product.Id}", product.Id);
 });
 //Passando parametro pela Rota
 app.MapGet("/products/{code}" , ([FromRoute] string code) => {
