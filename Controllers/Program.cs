@@ -5,9 +5,17 @@ var app = builder.Build();
 builder.Services.AddSqlServer<ApplicationDbContext>(builder.Configuration["Database:SqlServer"]);
 
 //Passando informação pelo Body
-app.MapPost("/products", (Product product) => {
-    ProductRepository.Add(product);
-    return Results.Created($"/products/product.Code", product.Code);
+app.MapPost("/products", (ProductDTO productDto, ApplicationDbContext context) => {
+
+    var category = context.Categories.Where(c => c.Id == productDto.CategoryId).First();
+    var product = new Product {
+        Code = productDto.Code,
+        Name = productDto.Name,
+        Description = productDto.Description,
+        Category = category
+    };
+    ProductRepository.Add(productDto);
+    return Results.Created($"/products/product.Code", productDto.Code);
 });
 //Passando parametro pela Rota
 app.MapGet("/products/{code}" , ([FromRoute] string code) => {
@@ -23,7 +31,7 @@ app.MapPut("/products" , (Product product) => {
     return Results.Ok();
 });
 
-app.MapDelete("/products/{code}" , ([FromRoute] string code) => {
+app.MapDelete("/products/{code}" , ([FromRoute] string code) => {   
     var removeProduct = ProductRepository.GetBy(code);
     ProductRepository.Remove(removeProduct);
     return Results.Ok();
